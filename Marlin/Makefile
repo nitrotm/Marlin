@@ -41,7 +41,7 @@ HARDWARE_MOTHERBOARD ?= 72
 
 # Arduino source install directory, and version number
 ARDUINO_INSTALL_DIR  ?= /usr/share/arduino
-ARDUINO_VERSION      ?= 165
+ARDUINO_VERSION      ?= 168
 
 # You can optionally set a path to the avr-gcc tools. Requires a trailing slash. (ex: /usr/local/avr-gcc/bin)
 AVR_TOOLS_PATH ?=
@@ -221,7 +221,7 @@ VPATH += $(BUILD_DIR)
 VPATH += $(HARDWARE_SRC)
 ifeq ($(HARDWARE_VARIANT), arduino)
 VPATH += $(ARDUINO_INSTALL_DIR)/libraries/LiquidCrystal/src
-VPATH += $(HARDWARE_DIR)/$(HARDWARE_VARIANT)/avr/libraries/SPI
+VPATH += $(HARDWARE_DIR)/$(HARDWARE_VARIANT)/avr/libraries/SPI/src
 ifeq ($(LIQUID_TWI2), 1)
 VPATH += $(ARDUINO_INSTALL_DIR)/libraries/Wire
 VPATH += $(ARDUINO_INSTALL_DIR)/libraries/Wire/utility
