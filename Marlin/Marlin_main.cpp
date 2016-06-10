@@ -265,15 +265,15 @@ int EtoPPressure=0;
   // these are the default values, can be overriden with M665
   float delta_radius= DELTA_RADIUS;
   float delta_tower1_x= -SIN_60*delta_radius; // front left tower
-  float delta_tower1_y= -COS_60*delta_radius;	   
+  float delta_tower1_y= -COS_60*delta_radius;
   float delta_tower2_x=  SIN_60*delta_radius; // front right tower
-  float delta_tower2_y= -COS_60*delta_radius;	   
+  float delta_tower2_y= -COS_60*delta_radius;
   float delta_tower3_x= 0.0;                  // back middle tower
   float delta_tower3_y= delta_radius;
   float delta_diagonal_rod= DELTA_DIAGONAL_ROD;
   float delta_diagonal_rod_2= sq(delta_diagonal_rod);
   float delta_segments_per_second= DELTA_SEGMENTS_PER_SECOND;
-#endif					
+#endif
 
 //===========================================================================
 //=============================Private Variables=============================
@@ -1135,7 +1135,7 @@ void refresh_cmd_timeout(void)
       current_position[Z_AXIS]+=retract_zlift;
       plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
       //prepare_move();
-      current_position[E_AXIS]-=(retract_length+retract_recover_length)/volumetric_multiplier[active_extruder]; 
+      current_position[E_AXIS]-=(retract_length+retract_recover_length)/volumetric_multiplier[active_extruder];
       plan_set_e_position(current_position[E_AXIS]);
       float oldFeedrate = feedrate;
       feedrate=retract_recover_feedrate*60;
@@ -1797,24 +1797,43 @@ void process_commands()
         int pin_number = LED_PIN;
         if (code_seen('P') && pin_status >= 0 && pin_status <= 255)
           pin_number = code_value();
-        for(int8_t i = 0; i < (int8_t)sizeof(sensitive_pins); i++)
+      #if defined(FAN_PIN) && FAN_PIN > -1
+        if (pin_number == FAN_PIN) {
+          fanSpeed = pin_status;
+          break;
+        }
+      #endif
+
+        int safe_pin_number = pin_number;
+
+        for(int8_t i = 0; i < (int8_t)(sizeof(sensitive_pins) / sizeof(int)); i++)
         {
           if (sensitive_pins[i] == pin_number)
           {
-            pin_number = -1;
-            break;
+            safe_pin_number = -1;
           }
         }
-      #if defined(FAN_PIN) && FAN_PIN > -1
-        if (pin_number == FAN_PIN)
-          fanSpeed = pin_status;
-      #endif
-        if (pin_number > -1)
+
+        if (safe_pin_number > -1)
         {
-          pinMode(pin_number, OUTPUT);
-          digitalWrite(pin_number, pin_status);
-          analogWrite(pin_number, pin_status);
+          SERIAL_PROTOCOLPGM("ok P:");
+          SERIAL_PROTOCOL(pin_number);
+          SERIAL_PROTOCOLPGM(", S:");
+          SERIAL_PROTOCOL(pin_status);
+          SERIAL_PROTOCOLLN("");
+
+          pinMode(safe_pin_number, OUTPUT);
+          digitalWrite(safe_pin_number, pin_status);
+          analogWrite(safe_pin_number, pin_status);
+        } else {
+          SERIAL_ERROR_START;
+          SERIAL_ERRORPGM("Unsafe pin P:");
+          SERIAL_PROTOCOL(pin_number);
+          SERIAL_PROTOCOLLN("");
         }
+      } else {
+        SERIAL_ERROR_START;
+        SERIAL_ERRORLNPGM("Sxxx missing");
       }
      break;
     case 104: // M104
@@ -2334,7 +2353,7 @@ void process_commands()
 		if(code_seen('S')) {
 			delta_segments_per_second= code_value();
 		}
-		
+
 		recalc_delta_settings(delta_radius, delta_diagonal_rod);
 		break;
     case 666: // M666 set delta endstop adjustemnt
@@ -2618,14 +2637,14 @@ void process_commands()
     case 240: // M240  Triggers a camera by emulating a Canon RC-1 : http://www.doc-diy.net/photo/rc-1_hacked/
      {
      	#ifdef CHDK
-       
+
          SET_OUTPUT(CHDK);
          WRITE(CHDK, HIGH);
          chdkHigh = millis();
          chdkActive = true;
-       
+
        #else
-     	
+
       	#if defined(PHOTOGRAPH_PIN) && PHOTOGRAPH_PIN > -1
 	const uint8_t NUM_PULSES=16;
 	const float PULSE_LENGTH=0.01524;
@@ -3092,12 +3111,12 @@ void process_commands()
         // Set the new active extruder and position
         active_extruder = tmp_extruder;
       #endif //else DUAL_X_CARRIAGE
-#ifdef DELTA 
+#ifdef DELTA
 
   calculate_delta(current_position); // change cartesian kinematic  to  delta kinematic;
    //sent position to plan_set_position();
   plan_set_position(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],current_position[E_AXIS]);
-            
+
 #else
         plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 
@@ -3205,9 +3224,9 @@ void clamp_to_software_endstops(float target[3])
 void recalc_delta_settings(float radius, float diagonal_rod)
 {
 	 delta_tower1_x= -SIN_60*radius; // front left tower
-	 delta_tower1_y= -COS_60*radius;	   
+	 delta_tower1_y= -COS_60*radius;
 	 delta_tower2_x=  SIN_60*radius; // front right tower
-	 delta_tower2_y= -COS_60*radius;	   
+	 delta_tower2_y= -COS_60*radius;
 	 delta_tower3_x= 0.0;                  // back middle tower
 	 delta_tower3_y= radius;
 	 delta_diagonal_rod_2= sq(diagonal_rod);
@@ -3438,7 +3457,7 @@ void manage_inactivity()
       }
     }
   }
-  
+
   #ifdef CHDK //Check if pin should be set to LOW after M240 set it to HIGH
     if (chdkActive)
     {
@@ -3447,7 +3466,7 @@ void manage_inactivity()
       WRITE(CHDK, LOW);
     }
   #endif
-  
+
   #if defined(KILL_PIN) && KILL_PIN > -1
     if( 0 == READ(KILL_PIN) )
       kill();
