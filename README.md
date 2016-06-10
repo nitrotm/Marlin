@@ -334,10 +334,22 @@ Bear in mind that really fast moves may render step skipping. 6000 mm/min (100mm
 
 The Z axis is lifted when traveling to the first probe point by Z_RAISE_BEFORE_PROBING value
 and then lifted when traveling from first to second and second to third point by Z_RAISE_BETWEEN_PROBINGS.
-All values are in mm as usual. 
+All values are in mm as usual.
 
 That's it.. enjoy never having to calibrate your Z endstop neither leveling your bed by hand anymore ;-)
 
 
+Custom tweaks:
+-------------
 
+- Inverted x/y axis (steppers outside the frame)
 
+- GT2 gears and belts
+
+- Stepper cooling fans:
+
+  Start:
+  M42 P38 S255
+
+  Stop:
+  M42 P38 S0
